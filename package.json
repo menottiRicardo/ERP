@@ -4,13 +4,22 @@
   "description": "Nestjs RabbitMQ Microservices",
   "scripts": {
     "deploy": "sh deploy.sh",
-    "core:up": "docker-compose -f docker-compose.core.yml up -d",
-    "core:down": "docker-compose -f docker-compose.core.yml down"
+    "core:up": "docker-compose -f docker-compose.yml up -d",
+    "core:down": "docker-compose -f docker-compose.yml down",
+    "start:dev": "concurrently \"npm run start:auth\" \"npm run start:mailer\" \"npm run start:post\" \"npm run start:files\" \"npm run start:notification\" \"npm run start:auth\"",
+    "start:auth": "cd auth && yarn dev",
+    "start:mailer": "cd mailer && yarn dev",
+    "start:post": "cd post && yarn dev",
+    "start:files": "cd files && yarn dev",
+    "start:notification": "cd notification && yarn dev"
   },
   "keywords": [
     "microservices",
     "nestjs"
   ],
   "author": "hmake98",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
 }

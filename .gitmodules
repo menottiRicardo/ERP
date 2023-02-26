@@ -4,6 +4,9 @@
 [submodule "post"]
 	path = post
 	url = https://github.com/menottiRicardo/post.git
+[submodule "inventory"]
+	path = inventory
+	url = https://github.com/menottiRicardo/inventory.git
 [submodule "mailer"]
 	path = mailer
 	url = https://github.com/menottiRicardo/mailer.git
