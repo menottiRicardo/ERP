@@ -4,7 +4,9 @@ services:
     build:
       context: ./auth
       dockerfile: Dockerfile
+      target: development
     restart: on-failure
+    command: npm run start:dev
     ports:
       - "3001:3001"
     env_file:
@@ -14,66 +16,88 @@ services:
     volumes:
       - ./auth:/app/auth
       - /app/auth/node_modules
+    environment:
+      RMQ_URI: amqp://guest:guest@rabbitmq:5672
     depends_on:
-      - postgres
-  mailer:
+      - rabbitmq
+  inventory:
     build:
-      context: ./mailer
+      context: ./inventory
       dockerfile: Dockerfile
+      target: development
     restart: on-failure
-    env_file:
-      - ./mailer/.env.dev
-    networks:
-      - backend
-    volumes:
-      - ./mailer:/app/mailer
-      - /app/mailer/node_modules
-    logging:
-      driver: fluentd
-      options:
-        fluentd-async: "true"
-        fluentd-address: localhost:24224
-        tag: mailer-service
-  files:
-    build:
-      context: ./files
-      dockerfile: Dockerfile
-    restart: on-failure
+    command: npm run start:dev
     ports:
-      - "9003:9003"
+      - "3002:3002"
     env_file:
-      - ./files/.env.dev
+      - ./inventory/.env
     networks:
       - backend
     volumes:
-      - ./files:/app/files
-      - /app/files/node_modules
-    logging:
-      driver: fluentd
-      options:
-        fluentd-async: "true"
-        fluentd-address: localhost:24224
-        tag: files-service
-  notification:
-    build:
-      context: ./notification
-      dockerfile: Dockerfile
-    restart: on-failure
-    ports:
-      - "9004:9004"
-    env_file:
-      - ./notification/.env.dev
-    networks:
-      - backend
-    volumes:
-      - ./notification:/app/notification
-      - /app/notification/node_modules
-    logging:
-      driver: fluentd
-      options:
-        fluentd-async: "true"
-        fluentd-address: localhost:24224
-        tag: notification-service
+      - ./auth:/app/auth
+      - /app/auth/node_modules
+    environment:
+      RMQ_URI: amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      - rabbitmq
+  # mailer:
+  #   build:
+  #     context: ./mailer
+  #     dockerfile: Dockerfile
+  #   restart: on-failure
+  #   env_file:
+  #     - ./mailer/.env.dev
+  #   networks:
+  #     - backend
+  #   volumes:
+  #     - ./mailer:/app/mailer
+  #     - /app/mailer/node_modules
+  #   logging:
+  #     driver: fluentd
+  #     options:
+  #       fluentd-async: "true"
+  #       fluentd-address: localhost:24224
+  #       tag: mailer-service
+  # files:
+  #   build:
+  #     context: ./files
+  #     dockerfile: Dockerfile
+  #   restart: on-failure
+  #   ports:
+  #     - "9003:9003"
+  #   env_file:
+  #     - ./files/.env.dev
+  #   networks:
+  #     - backend
+  #   volumes:
+  #     - ./files:/app/files
+  #     - /app/files/node_modules
+  #   logging:
+  #     driver: fluentd
+  #     options:
+  #       fluentd-async: "true"
+  #       fluentd-address: localhost:24224
+  #       tag: files-service
+  # notification:
+  #   build:
+  #     context: ./notification
+  #     dockerfile: Dockerfile
+  #   restart: on-failure
+  #   ports:
+  #     - "9004:9004"
+  #   env_file:
+  #     - ./notification/.env.dev
+  #   networks:
+  #     - backend
+  #   volumes:
+  #     - ./notification:/app/notification
+  #     - /app/notification/node_modules
+  #   logging:
+  #     driver: fluentd
+  #     options:
+  #       fluentd-async: "true"
+  #       fluentd-address: localhost:24224
+  #       tag: notification-service
   kong:
     build:
       context: ./kong
@@ -91,23 +115,9 @@ services:
         fluentd-async: "true"
         fluentd-address: localhost:24224
         tag: kong
-  postgres:
-    image: postgres
-    restart: always
-    container_name: postgres
-    env_file:
-      - .env
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes:
-      - postgres:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - backend
   rabbitmq:
     image: rabbitmq:3-management
+    container_name: rabbitmq
     volumes:
       - rabbit_data:/var/lib/rabbitmq
     ports:
@@ -121,12 +131,6 @@ services:
       - "6379:6379"
     networks:
       - backend
-    logging:
-      driver: fluentd
-      options:
-        fluentd-async: "true"
-        fluentd-address: localhost:24224
-        tag: redis
   mongodb:
     image: mongo:latest
     ports:
@@ -135,18 +139,10 @@ services:
       - mongo_data:/data/db
     networks:
       - backend
-    logging:
-      driver: fluentd
-      options:
-        fluentd-async: "true"
-        fluentd-address: localhost:24224
-        tag: mongodb
 networks:
   backend:
     driver: bridge
 volumes:
-  pg_data:
-    driver: local
   rabbit_data:
     driver: local
   mongo_data:
